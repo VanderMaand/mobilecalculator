@@ -34,7 +34,7 @@ Aplikasi ini berupa aplikasi mobile Flutter dengan beberapa layar (screen) yang 
 ## 🗂️ Struktur Folder Project (Flutter)
 
 ```
-flutter_app_kelompok_x/
+mobilecalculator/
 ├── .gitignore
 ├── README.md
 ├── pubspec.yaml
