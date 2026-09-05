@@ -10,7 +10,7 @@ Aplikasi mobile berbasis **Flutter (Dart)** yang mencakup fitur login, data kelo
 |----|--------------|----------------|---------------------------------|----------------------|
 | 1  | _(isi nama)_ |  _(isi NIM)_   |                                 |     @_(isi)_         |
 | 2  | Sepi Ananda  |    124240066   |                                 |     @VanderMaand     |
-| 3  | _(isi nama)_ |   _(isi NIM)_  | Ganjil/Genap & Jumlah Total     |     @_(isi)_         |
+| 3  | _(isi nama)_ |   _(isi NIM)_  |      |     @_(isi)_         |
 > ⚠️ **Wajib diisi di awal pengerjaan** — data ini juga digunakan untuk penilaian individu dalam kelompok.
 
 ---
