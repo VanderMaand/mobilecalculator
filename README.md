@@ -1,4 +1,4 @@
-# 📱 Aplikasi Flutter – Tugas Kelompok
+# Mobile Calculator
 
 Aplikasi mobile berbasis **Flutter (Dart)** yang mencakup fitur login, data kelompok, operasi aritmatika, pengecekan ganjil/genap, dan penjumlahan total angka dari input pengguna, lengkap dengan tampilan UI (bukan hanya CLI).
 
