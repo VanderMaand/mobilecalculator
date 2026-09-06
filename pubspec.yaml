@@ -1,4 +1,0 @@
-name: mobilecalculator
-description: Aplikasi Dart tugas kelompok
-environment:
-  sdk: '>=3.0.0 <4.0.0'
