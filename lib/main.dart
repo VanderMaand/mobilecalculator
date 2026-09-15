@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF6C5CE7), // Warna dasar/utama aplikasi
           primary: const Color(0xFF6C5CE7),
           secondary: const Color(0xFFA29BFE),
-          background: const Color(0xFFF8F9FA),
+          surface: const Color(0xFFF8F9FA),
         ),
         useMaterial3: true,
         fontFamily: 'Roboto',
@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6C5CE7).withOpacity(0.1),
+                        color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -379,7 +379,7 @@ class HomeScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 28),
@@ -416,7 +416,7 @@ class HomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -427,7 +427,7 @@ class HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 30),
@@ -647,9 +647,9 @@ class DataKelompokScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // List data dummy anggota kelompok
     final List<Map<String, String>> anggota = [
-      {'nama': 'Muhammad Shofa Azmy', 'nim': '124240058', 'role': 'President'},
-      {'nama': 'Sepi Ananda', 'nim': '124240066', 'role': 'Vice President'},
-      {'nama': 'M Dimas Ragil', 'nim': '124240146', 'role': 'Rakyat'},
+      {'nama': 'Muhammad Shofa Azmy', 'nim': '124240058', 'role': 'Leader and Develope'},
+      {'nama': 'Sepi Ananda', 'nim': '124240066', 'role': 'Developer 2'},
+      {'nama': 'M Dimas Ragil', 'nim': '124240146', 'role': 'Developer 3'},
     ];
 
     return Scaffold(
