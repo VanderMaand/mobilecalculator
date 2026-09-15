@@ -96,14 +96,34 @@ class AppController extends GetxController {
   }
 
   String getWeton(DateTime date) {
-    // Referensi 1 Jan 1970 adalah Wage
     final pasaran = ['Wage', 'Kliwon', 'Legi', 'Pahing', 'Pon'];
-    final diff = date.difference(DateTime(1970, 1, 1)).inDays;
-    return pasaran[(diff % 5).abs()];
+    final dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    int dayIndex = date.weekday % 7;
+    int diff = date.difference(DateTime(1970, 1, 1)).inDays;
+    int pasaranIndex = (diff % 5).abs();
+    return "${dayNames[dayIndex]} ${pasaran[pasaranIndex]}";
   }
 
   String getSakaBali(DateTime date) {
+    const sakaMonths = [
+      'Chaitra', 'Vaisakha', 'Jyeshtha', 'Ashadha',
+      'Shravana', 'Bhadra', 'Ashwin', 'Kartik',
+      'Margashirsha', 'Pausha', 'Magha', 'Phalguna',
+    ];
     int sakaYear = date.year - 78;
-    return "Tahun Saka $sakaYear";
+    DateTime sakaStart = DateTime(date.year, 3, 21);
+    if (date.isBefore(sakaStart)) {
+      sakaStart = DateTime(date.year - 1, 3, 21);
+      sakaYear--;
+    }
+    int dayCount = date.difference(sakaStart).inDays;
+    int month = (dayCount / 30).floor();
+    int day = (dayCount % 30) + 1;
+    if (month >= 12) {
+      month = 11;
+      day = (dayCount - 330) + 1;
+      if (day > 30) day = 30;
+    }
+    return "$day ${sakaMonths[month]} $sakaYear Saka";
   }
 }
