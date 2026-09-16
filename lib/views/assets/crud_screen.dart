@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../db/database_helper.dart';
+import '../../widgets/app_widgets.dart';
 
 class CrudScreen extends StatefulWidget {
+  const CrudScreen({super.key});
+
   @override
-  _CrudScreenState createState() => _CrudScreenState();
+  State<CrudScreen> createState() => _CrudScreenState();
 }
 
 class _CrudScreenState extends State<CrudScreen> {
+  static const List<Color> _categoryColors = [
+    Color(0xFF1E88E5),
+    Color(0xFF00897B),
+    Color(0xFFFB8C00),
+    Color(0xFF3949AB),
+  ];
+
   final dbHelper = DatabaseHelper();
   List<Map<String, dynamic>> assets = [];
   bool _isLoading = true;
@@ -63,21 +73,21 @@ class _CrudScreenState extends State<CrudScreen> {
                 children: [
                   TextFormField(
                     controller: nameController,
-                    decoration: InputDecoration(labelText: 'Nama Aset'),
+                    decoration: const InputDecoration(labelText: 'Nama Aset'),
                     validator: (value) =>
                         value == null || value.trim().isEmpty ? 'Nama wajib diisi' : null,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: typeController,
-                    decoration: InputDecoration(labelText: 'Tipe Aset'),
+                    decoration: const InputDecoration(labelText: 'Tipe Aset'),
                     validator: (value) =>
                         value == null || value.trim().isEmpty ? 'Tipe wajib diisi' : null,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: costController,
-                    decoration: InputDecoration(labelText: 'Biaya (Rp)', prefixText: 'Rp '),
+                    decoration: const InputDecoration(labelText: 'Biaya (Rp)', prefixText: 'Rp '),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) return 'Biaya wajib diisi';
@@ -93,7 +103,7 @@ class _CrudScreenState extends State<CrudScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
+              child: const Text('Batal'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -158,17 +168,17 @@ class _CrudScreenState extends State<CrudScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Hapus Aset'),
+        title: const Text('Hapus Aset'),
         content: Text('Yakin ingin menghapus "$name"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal'),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Hapus'),
+            child: const Text('Hapus'),
           ),
         ],
       ),
@@ -195,76 +205,162 @@ class _CrudScreenState extends State<CrudScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Manajemen Aset (CRUD)')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      SizedBox(height: 16),
-                      Text('Terjadi Kesalahan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(_errorMessage!, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600])),
-                      ),
-                      SizedBox(height: 16),
-                      ElevatedButton(onPressed: _loadData, child: Text('Coba Lagi')),
-                    ],
-                  ),
-                )
-              : assets.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('Belum ada data aset', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                          SizedBox(height: 8),
-                          Text('Tekan tombol + untuk menambahkan aset', style: TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: assets.length,
-                      itemBuilder: (context, index) {
-                        final asset = assets[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              child: Text('${index + 1}'),
-                            ),
-                            title: Text(asset['name'], style: TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text(
-                              '${asset['type']}  •  Rp ${asset['cost']}',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _showAssetForm(asset: asset),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _deleteData(asset['id'], asset['name']),
-                                ),
-                              ],
-                            ),
+      appBar: const GradientAppBar(title: 'Manajemen Aset (CRUD)'),
+      body: PageBackground(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Terjadi Kesalahan',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+                      ],
                     ),
+                  )
+                : assets.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Belum ada data aset',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tekan tombol + untuk menambahkan aset',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      )
+                    : SafeArea(
+                        top: false,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 88),
+                          itemCount: assets.length,
+                          itemBuilder: (context, index) {
+                            final asset = assets[index];
+                            final color = _categoryColors[index % _categoryColors.length];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _AssetCard(
+                                color: color,
+                                name: asset['name'],
+                                type: asset['type'],
+                                cost: asset['cost'] as int,
+                                onEdit: () => _showAssetForm(asset: asset),
+                                onDelete: () => _deleteData(asset['id'], asset['name']),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAssetForm,
-        icon: Icon(Icons.add),
-        label: Text('Tambah Aset'),
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah Aset'),
+      ),
+    );
+  }
+}
+
+class _AssetCard extends StatelessWidget {
+  const _AssetCard({
+    required this.color,
+    required this.name,
+    required this.type,
+    required this.cost,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final Color color;
+  final String name;
+  final String type;
+  final int cost;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x14000000),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.inventory_2_outlined, color: color, size: 26),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$type  •  ${formatRupiah(cost)}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Color(0xFF1E88E5)),
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            onPressed: onDelete,
+          ),
+        ],
       ),
     );
   }

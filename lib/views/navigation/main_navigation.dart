@@ -7,25 +7,40 @@ import '../tools/stopwatch_screen.dart';
 import '../help/help_screen.dart';
 
 class MainNavigation extends StatelessWidget {
-  final AppController appC = Get.find();
+  const MainNavigation({super.key});
 
-  final List<Widget> _screens = [HomeScreen(), StopwatchScreen(), HelpScreen()];
+  static final List<Widget> _screens = [
+    const HomeScreen(),
+    const StopwatchScreen(),
+    const HelpScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final AppController appC = Get.find();
     return Scaffold(
       body: Obx(() => _screens[appC.tabIndex.value]),
       bottomNavigationBar: Obx(
-        () => BottomNavigationBar(
-          currentIndex: appC.tabIndex.value,
-          onTap: appC.changeTabIndex,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Utama'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.timer),
+        () => NavigationBar(
+          selectedIndex: appC.tabIndex.value,
+          onDestinationSelected: appC.changeTabIndex,
+          indicatorColor: const Color(0xFFAECBFA),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Utama',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.timer_outlined),
+              selectedIcon: Icon(Icons.timer),
               label: 'Stopwatch',
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.help), label: 'Bantuan'),
+            NavigationDestination(
+              icon: Icon(Icons.help_outline),
+              selectedIcon: Icon(Icons.help),
+              label: 'Bantuan',
+            ),
           ],
         ),
       ),

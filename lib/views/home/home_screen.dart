@@ -1,38 +1,213 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'members_screen.dart';
+
+import '../../widgets/app_widgets.dart';
 import '../assets/computation_screen.dart';
 import '../assets/crud_screen.dart';
 import '../tools/age_conversion_screen.dart';
 import '../tools/date_conversion_screen.dart';
+import 'members_screen.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Dashboard Utama')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildMenuBtn('1. Daftar Anggota', () => Get.to(() => MembersScreen())),
-            _buildMenuBtn('2. Kalkulasi Biaya Aset', () => Get.to(() => ComputationScreen())),
-            _buildMenuBtn('3. Kelola Data Aset (CRUD)', () => Get.to(() => CrudScreen())),
-            _buildMenuBtn('4. Konversi Umur', () => Get.to(() => AgeConversionScreen())),
-            _buildMenuBtn('5. Konversi Kalender', () => Get.to(() => DateConversionScreen())),
-          ],
+      appBar: const GradientAppBar(title: 'Dashboard Utama'),
+      body: PageBackground(
+        child: SafeArea(
+          top: false,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              const _WelcomeHeader(),
+              const SizedBox(height: 24),
+              const SectionTitle(icon: Icons.apps, label: 'MENU APLIKASI'),
+              const SizedBox(height: 12),
+              _MenuCard(
+                number: '1',
+                title: 'Daftar Anggota',
+                subtitle: 'Lihat daftar anggota kelompok',
+                color: const Color(0xFF1E88E5),
+                icon: Icons.groups,
+                onTap: () => Get.to(() => const MembersScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                number: '2',
+                title: 'Kalkulasi Biaya Aset',
+                subtitle: 'Hitung total estimasi biaya aset',
+                color: const Color(0xFF00897B),
+                icon: Icons.payments_outlined,
+                onTap: () => Get.to(() => ComputationScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                number: '3',
+                title: 'Kelola Data Aset (CRUD)',
+                subtitle: 'Tambah, edit, dan hapus data aset',
+                color: const Color(0xFFFB8C00),
+                icon: Icons.inventory_2_outlined,
+                onTap: () => Get.to(() => const CrudScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                number: '4',
+                title: 'Konversi Umur',
+                subtitle: 'Hitung umur lengkap dari tanggal lahir',
+                color: const Color(0xFF3949AB),
+                icon: Icons.cake_outlined,
+                onTap: () => Get.to(() => const AgeConversionScreen()),
+              ),
+              const SizedBox(height: 12),
+              _MenuCard(
+                number: '5',
+                title: 'Konversi Kalender',
+                subtitle: 'Konversi ke kalender Hijriah, Jawa, dan Saka',
+                color: const Color(0xFF00ACC1),
+                icon: Icons.calendar_month,
+                onTap: () => Get.to(() => const DateConversionScreen()),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildMenuBtn(String title, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(minimumSize: Size(250, 50)),
-        onPressed: onTap,
-        child: Text(title),
+class _WelcomeHeader extends StatelessWidget {
+  const _WelcomeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kPrimary, kSecondary],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: kPrimary.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.dashboard, color: Colors.white, size: 32),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selamat Datang',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Kelola anggota, aset, dan tool konversi dalam satu aplikasi.',
+                  style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuCard extends StatelessWidget {
+  const _MenuCard({
+    required this.number,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String number;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x14000000),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$number. $title',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
+            ],
+          ),
+        ),
       ),
     );
   }
