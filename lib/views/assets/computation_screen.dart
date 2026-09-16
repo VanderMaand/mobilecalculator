@@ -10,7 +10,7 @@ class ComputationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const GradientAppBar(title: 'Kalkulasi Biaya'),
+      appBar: const GradientAppBar(title: 'Kalkulasi Biaya Aset'),
       body: PageBackground(
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: dbHelper.getAssets(),
@@ -43,9 +43,8 @@ class ComputationScreen extends StatelessWidget {
               );
             }
             final assets = snapshot.data ?? [];
-            final itemCount = assets.length;
 
-            if (itemCount == 0) {
+            if (assets.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -70,15 +69,56 @@ class ComputationScreen extends StatelessWidget {
               );
             }
 
-            int totalCost =
-                assets.fold(0, (sum, item) => sum + (item['cost'] as int));
+            int totalCost = assets.fold(
+                0,
+                (sum, item) =>
+                    sum +
+                    ((item['cost'] as int) * (item['quantity'] as int)));
+
+            final Map<String, int> categoryTotals = {};
+            final Map<String, int> categoryUnits = {};
+            for (final item in assets) {
+              final cat = item['category'] as String;
+              final amount = (item['cost'] as int) * (item['quantity'] as int);
+              categoryTotals[cat] = (categoryTotals[cat] ?? 0) + amount;
+              categoryUnits[cat] =
+                  (categoryUnits[cat] ?? 0) + (item['quantity'] as int);
+            }
+            final int totalUnits =
+                assets.fold(0, (sum, item) => sum + (item['quantity'] as int));
 
             return SafeArea(
               top: false,
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  _SummaryCard(itemCount: itemCount, totalCost: totalCost),
+                  _SummaryCard(
+                    itemCount: assets.length,
+                    totalUnits: totalUnits,
+                    categoryCount: categoryTotals.length,
+                    totalCost: totalCost,
+                  ),
+                  const SizedBox(height: 24),
+                  const SectionTitle(
+                    icon: Icons.pie_chart_outline,
+                    label: 'RINCIAN PER KATEGORI',
+                  ),
+                  const SizedBox(height: 12),
+                  ...AssetCategory.values
+                      .where((cat) => categoryTotals.containsKey(cat))
+                      .map(
+                        (cat) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _CategoryCard(
+                            category: cat,
+                            amount: categoryTotals[cat]!,
+                            units: categoryUnits[cat]!,
+                            share: totalCost > 0
+                                ? categoryTotals[cat]! / totalCost
+                                : 0.0,
+                          ),
+                        ),
+                      ),
                   const SizedBox(height: 24),
                   const SectionTitle(
                     icon: Icons.receipt_long,
@@ -91,8 +131,9 @@ class ComputationScreen extends StatelessWidget {
                           child: _AssetRow(
                             index: entry.key,
                             name: entry.value['name'],
-                            type: entry.value['type'],
+                            category: entry.value['category'],
                             cost: entry.value['cost'] as int,
+                            quantity: entry.value['quantity'] as int,
                             totalCost: totalCost,
                           ),
                         ),
@@ -108,9 +149,16 @@ class ComputationScreen extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.itemCount, required this.totalCost});
+  const _SummaryCard({
+    required this.itemCount,
+    required this.totalUnits,
+    required this.categoryCount,
+    required this.totalCost,
+  });
 
   final int itemCount;
+  final int totalUnits;
+  final int categoryCount;
   final int totalCost;
 
   @override
@@ -132,46 +180,57 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.payments_outlined,
-                color: Colors.white, size: 32),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.payments_outlined,
+                    color: Colors.white, size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$itemCount aset terdaftar • $totalUnits unit',
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Total Estimasi Biaya',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$itemCount aset terdaftar',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Total Estimasi Biaya',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  formatRupiah(totalCost),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 12),
+          Text(
+            formatRupiah(totalCost),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$categoryCount kategori aktif',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
         ],
       ),
@@ -179,24 +238,22 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _AssetRow extends StatelessWidget {
-  const _AssetRow({
-    required this.index,
-    required this.name,
-    required this.type,
-    required this.cost,
-    required this.totalCost,
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({
+    required this.category,
+    required this.amount,
+    required this.units,
+    required this.share,
   });
 
-  final int index;
-  final String name;
-  final String type;
-  final int cost;
-  final int totalCost;
+  final String category;
+  final int amount;
+  final int units;
+  final double share;
 
   @override
   Widget build(BuildContext context) {
-    final double share = totalCost > 0 ? cost / totalCost : 0.0;
+    final color = categoryColor(category);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -216,27 +273,123 @@ class _AssetRow extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: kPrimary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  '${index + 1}',
-                  style: const TextStyle(
-                    color: kPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Icon(categoryIcon(category), color: color, size: 24),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      category,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '$units unit',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    formatRupiah(amount),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    '${(share * 100).toStringAsFixed(1)}%',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: share,
+              minHeight: 6,
+              backgroundColor: color.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AssetRow extends StatelessWidget {
+  const _AssetRow({
+    required this.index,
+    required this.name,
+    required this.category,
+    required this.cost,
+    required this.quantity,
+    required this.totalCost,
+  });
+
+  final int index;
+  final String name;
+  final String category;
+  final int cost;
+  final int quantity;
+  final int totalCost;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = categoryColor(category);
+    final total = cost * quantity;
+    final double share = totalCost > 0 ? total / totalCost : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x14000000),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(categoryIcon(category), color: color, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${index + 1}. $name',
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -244,14 +397,14 @@ class _AssetRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      type,
+                      '$category • $quantity × ${formatRupiah(cost)}',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
               Text(
-                formatRupiah(cost),
+                formatRupiah(total),
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -260,14 +413,14 @@ class _AssetRow extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: share,
               minHeight: 6,
-              backgroundColor: kPrimary.withValues(alpha: 0.1),
-              valueColor: const AlwaysStoppedAnimation(kSecondary),
+              backgroundColor: color.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
         ],

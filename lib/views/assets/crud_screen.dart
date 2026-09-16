@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../db/database_helper.dart';
 import '../../widgets/app_widgets.dart';
 
@@ -10,13 +11,6 @@ class CrudScreen extends StatefulWidget {
 }
 
 class _CrudScreenState extends State<CrudScreen> {
-  static const List<Color> _categoryColors = [
-    Color(0xFF1E88E5),
-    Color(0xFF00897B),
-    Color(0xFFFB8C00),
-    Color(0xFF3949AB),
-  ];
-
   final dbHelper = DatabaseHelper();
   List<Map<String, dynamic>> assets = [];
   bool _isLoading = true;
@@ -55,74 +49,138 @@ class _CrudScreenState extends State<CrudScreen> {
   void _showAssetForm({Map<String, dynamic>? asset}) {
     final isEdit = asset != null;
     final nameController = TextEditingController(text: isEdit ? asset['name'] : '');
-    final typeController = TextEditingController(text: isEdit ? asset['type'] : '');
+    final quantityController =
+        TextEditingController(text: isEdit ? '${asset['quantity']}' : '1');
     final costController = TextEditingController(text: isEdit ? '${asset['cost']}' : '');
+    String selectedCategory = isEdit ? asset['category'] ?? AssetCategory.hardware : AssetCategory.hardware;
+    DateTime? selectedDate = isEdit && asset['purchase_date'] != null
+        ? DateTime.tryParse(asset['purchase_date'] as String)
+        : null;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          title: Text(isEdit ? 'Edit Aset' : 'Tambah Aset'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Nama Aset'),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Nama wajib diisi' : null,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Future<void> pickDate() async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: selectedDate ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) {
+                setDialogState(() => selectedDate = picked);
+              }
+            }
+
+            return AlertDialog(
+              title: Text(isEdit ? 'Edit Aset' : 'Tambah Aset'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Nama Aset'),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty ? 'Nama wajib diisi' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedCategory,
+                        decoration: const InputDecoration(labelText: 'Kategori'),
+                        items: AssetCategory.values
+                            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setDialogState(() => selectedCategory = value);
+                          }
+                        },
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Kategori wajib dipilih' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: quantityController,
+                        decoration: const InputDecoration(labelText: 'Jumlah Unit'),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return 'Jumlah wajib diisi';
+                          final qty = int.tryParse(value.trim());
+                          if (qty == null) return 'Jumlah harus angka';
+                          if (qty <= 0) return 'Jumlah harus lebih dari 0';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: costController,
+                        decoration: const InputDecoration(labelText: 'Biaya per Unit (Rp)', prefixText: 'Rp '),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return 'Biaya wajib diisi';
+                          if (int.tryParse(value.trim()) == null) return 'Biaya harus angka';
+                          if (int.parse(value.trim()) <= 0) return 'Biaya harus lebih dari 0';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: pickDate,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Tanggal Pengadaan (opsional)',
+                            suffixIcon: Icon(Icons.event),
+                          ),
+                          child: Text(
+                            selectedDate == null
+                                ? 'Belum dipilih'
+                                : DateFormat('dd MMMM yyyy').format(selectedDate!),
+                            style: TextStyle(
+                              color: selectedDate == null ? Colors.grey[600] : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: typeController,
-                    decoration: const InputDecoration(labelText: 'Tipe Aset'),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Tipe wajib diisi' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: costController,
-                    decoration: const InputDecoration(labelText: 'Biaya (Rp)', prefixText: 'Rp '),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) return 'Biaya wajib diisi';
-                      if (int.tryParse(value.trim()) == null) return 'Biaya harus angka';
-                      if (int.parse(value.trim()) <= 0) return 'Biaya harus lebih dari 0';
-                      return null;
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final data = {
-                  'name': nameController.text.trim(),
-                  'type': typeController.text.trim(),
-                  'cost': int.parse(costController.text.trim()),
-                };
-                Navigator.pop(context);
-                if (isEdit) {
-                  await _updateData(asset['id'], data);
-                } else {
-                  await _addData(data);
-                }
-              },
-              child: Text(isEdit ? 'Simpan' : 'Tambah'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
+                    final data = {
+                      'name': nameController.text.trim(),
+                      'category': selectedCategory,
+                      'quantity': int.parse(quantityController.text.trim()),
+                      'cost': int.parse(costController.text.trim()),
+                      'purchase_date':
+                          selectedDate?.toIso8601String().split('T').first,
+                    };
+                    Navigator.pop(context);
+                    if (isEdit) {
+                      await _updateData(asset['id'], data);
+                    } else {
+                      await _addData(data);
+                    }
+                  },
+                  child: Text(isEdit ? 'Simpan' : 'Tambah'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -267,14 +325,10 @@ class _CrudScreenState extends State<CrudScreen> {
                           itemCount: assets.length,
                           itemBuilder: (context, index) {
                             final asset = assets[index];
-                            final color = _categoryColors[index % _categoryColors.length];
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: _AssetCard(
-                                color: color,
-                                name: asset['name'],
-                                type: asset['type'],
-                                cost: asset['cost'] as int,
+                                asset: asset,
                                 onEdit: () => _showAssetForm(asset: asset),
                                 onDelete: () => _deleteData(asset['id'], asset['name']),
                               ),
@@ -294,23 +348,25 @@ class _CrudScreenState extends State<CrudScreen> {
 
 class _AssetCard extends StatelessWidget {
   const _AssetCard({
-    required this.color,
-    required this.name,
-    required this.type,
-    required this.cost,
+    required this.asset,
     required this.onEdit,
     required this.onDelete,
   });
 
-  final Color color;
-  final String name;
-  final String type;
-  final int cost;
+  final Map<String, dynamic> asset;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
+    final name = asset['name'] as String;
+    final category = asset['category'] as String;
+    final cost = asset['cost'] as int;
+    final quantity = asset['quantity'] as int;
+    final total = cost * quantity;
+    final purchaseDate = asset['purchase_date'] as String?;
+    final color = categoryColor(category);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -333,7 +389,7 @@ class _AssetCard extends StatelessWidget {
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(Icons.inventory_2_outlined, color: color, size: 26),
+            child: Icon(categoryIcon(category), color: color, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -344,12 +400,46 @@ class _AssetCard extends StatelessWidget {
                   name,
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '$type  •  ${formatRupiah(cost)}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        purchaseDate == null
+                            ? '$quantity × ${formatRupiah(cost)}'
+                            : '$quantity × ${formatRupiah(cost)}  •  ${DateFormat('dd MMM yyyy').format(DateTime.parse(purchaseDate))}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            formatRupiah(total),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: kPrimary,
             ),
           ),
           IconButton(

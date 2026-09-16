@@ -37,7 +37,7 @@ class HomeScreen extends StatelessWidget {
               _MenuCard(
                 number: '2',
                 title: 'Kalkulasi Biaya Aset',
-                subtitle: 'Hitung total estimasi biaya aset',
+                subtitle: 'Total biaya perangkat & lisensi produksi per kategori',
                 color: const Color(0xFF00897B),
                 icon: Icons.payments_outlined,
                 onTap: () => Get.to(() => ComputationScreen()),
@@ -45,8 +45,8 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _MenuCard(
                 number: '3',
-                title: 'Kelola Data Aset (CRUD)',
-                subtitle: 'Tambah, edit, dan hapus data aset',
+                title: 'Kelola Aset Produksi (CRUD)',
+                subtitle: 'Tambah, edit, dan hapus perangkat, software, dan lisensi',
                 color: const Color(0xFFFB8C00),
                 icon: Icons.inventory_2_outlined,
                 onTap: () => Get.to(() => const CrudScreen()),
