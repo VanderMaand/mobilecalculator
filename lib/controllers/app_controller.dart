@@ -81,14 +81,36 @@ class AppController extends GetxController {
   }
 
   // Fungsi Konversi
-  String getAgeDetails(DateTime birthDate) {
-    final now = DateTime.now();
-    final diff = now.difference(birthDate);
-    final years = (diff.inDays / 365).floor();
-    final months = ((diff.inDays % 365) / 30).floor();
-    final days = (diff.inDays % 365) % 30;
-    return "$years Tahun, $months Bulan, $days Hari,\n${diff.inHours} Jam, ${diff.inMinutes} Menit, ${diff.inSeconds} Detik";
+String getAgeDetails(DateTime birthDate) {
+  final now = DateTime.now();
+
+  if (birthDate.isAfter(now)) {
+    return "Tanggal lahir belum terjadi";
   }
+
+  // 1. Hitung Tahun, Bulan, dan Hari (berbasis tanggal 00:00)
+  int years = now.year - birthDate.year;
+  int months = now.month - birthDate.month;
+  int days = now.day - birthDate.day;
+
+  if (days < 0) {
+    final previousMonth = DateTime(now.year, now.month, 0);
+    days += previousMonth.day;
+    months--;
+  }
+
+  if (months < 0) {
+    months += 12;
+    years--;
+  }
+
+  // 2. Waktu sisa berjalan hari ini (berhitung dari 00:00:00)
+  int hours = now.hour;
+  int minutes = now.minute;
+  int seconds = now.second;
+
+  return "$years Tahun, $months Bulan, $days Hari,\n$hours Jam, $minutes Menit, $seconds Detik";
+}
 
   String getHijriDate(DateTime date) {
     var hDate = HijriCalendar.fromDate(date);

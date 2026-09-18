@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 const Color kPrimary = Color(0xFF1565C0);
-const Color kSecondary = Color(0xFF42A5F5);
+const Color kSecondary = Color.fromARGB(255, 38, 219, 83);
 const Color kBackgroundTop = Color(0xFFE3F2FD);
 
 class AssetCategory {

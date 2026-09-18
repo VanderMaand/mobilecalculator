@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +18,24 @@ class _AgeConversionScreenState extends State<AgeConversionScreen> {
 
   final AppController appC = Get.find();
   DateTime? _selectedDate;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Memicu pembaruan UI setiap 1 detik untuk detik/menit/jam real-time
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_selectedDate != null && mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -35,17 +54,35 @@ class _AgeConversionScreenState extends State<AgeConversionScreen> {
 
   _AgeData _computeAge(DateTime birthDate) {
     final now = DateTime.now();
-    final diff = now.difference(birthDate);
-    final years = (diff.inDays / 365).floor();
-    final months = ((diff.inDays % 365) / 30).floor();
-    final days = (diff.inDays % 365) % 30;
+
+    // Perhitungan komponen kalender
+    int years = now.year - birthDate.year;
+    int months = now.month - birthDate.month;
+    int days = now.day - birthDate.day;
+
+    if (days < 0) {
+      final previousMonth = DateTime(now.year, now.month, 0);
+      days += previousMonth.day;
+      months--;
+    }
+
+    if (months < 0) {
+      months += 12;
+      years--;
+    }
+
+    // Sisa waktu berjalan hari ini dari pukul 00:00:00
+    int hours = now.hour;
+    int minutes = now.minute;
+    int seconds = now.second;
+
     return _AgeData(
-      years,
-      months,
-      days,
-      diff.inHours,
-      diff.inMinutes,
-      diff.inSeconds,
+      years < 0 ? 0 : years,
+      months < 0 ? 0 : months,
+      days < 0 ? 0 : days,
+      hours,
+      minutes,
+      seconds,
     );
   }
 
@@ -111,11 +148,11 @@ class _AgeConversionScreenState extends State<AgeConversionScreen> {
           colors: [_primary, _secondary],
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0x401565C0),
+            color: Color(0x401565C0),
             blurRadius: 16,
-            offset: const Offset(0, 8),
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -167,11 +204,11 @@ class _AgeConversionScreenState extends State<AgeConversionScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0x14000000),
+                color: Color(0x14000000),
                 blurRadius: 12,
-                offset: const Offset(0, 4),
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -228,11 +265,11 @@ class _AgeConversionScreenState extends State<AgeConversionScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0x14000000),
+            color: Color(0x14000000),
             blurRadius: 12,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
