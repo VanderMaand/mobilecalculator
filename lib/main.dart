@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'controllers/app_controller.dart';
 import 'views/auth/login_screen.dart';
+import 'views/auth/register_screen.dart';
 import 'views/navigation/main_navigation.dart';
 
 void main() {
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/login',
       getPages: [
         GetPage(name: '/login', page: () => LoginScreen()),
+        GetPage(name: '/register', page: () => const RegisterScreen()),
         GetPage(name: '/main', page: () => const MainNavigation()),
       ],
     );

@@ -264,7 +264,6 @@ class _ComputationScreenState extends State<ComputationScreen> {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 80),
         children: [
           // ── SUMMARY CARD ──
-          // ── SUMMARY CARD ──
           _SummaryCard(
             itemCount: _allAssets.length,
             selectedCount: selected.length,

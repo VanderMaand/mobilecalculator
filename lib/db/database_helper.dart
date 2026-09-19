@@ -8,8 +8,10 @@ import 'package:path/path.dart';
 class DatabaseHelper {
   static Database? _database;
   static const String tableName = 'game_assets';
-  static const int _version = 2;
+  static const String userTableName = 'users';
+  static const int _version = 3;
   static const String _prefsKey = 'game_assets_data';
+  static const String _usersPrefsKey = 'users_data';
 
   static String get createTableSql => '''
     CREATE TABLE $tableName (
@@ -22,7 +24,33 @@ class DatabaseHelper {
     )
   ''';
 
+  static String get createUsersTableSql => '''
+    CREATE TABLE $userTableName (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      fullname TEXT
+    )
+  ''';
+
   // ===================== WEB FALLBACK (SharedPreferences) =====================
+
+  // ----------------------- Users Preferences -----------------------
+
+  Future<List<Map<String, dynamic>>> _getUsersPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = prefs.getString(_usersPrefsKey);
+    if (json == null || json.isEmpty) return [];
+    final decoded = jsonDecode(json) as List<dynamic>;
+    return decoded
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+  }
+
+  Future<void> _saveUsersPrefs(List<Map<String, dynamic>> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_usersPrefsKey, jsonEncode(data));
+  }
 
   Future<List<Map<String, dynamic>>> _getAssetsPrefs() async {
     final prefs = await SharedPreferences.getInstance();
@@ -67,6 +95,9 @@ class DatabaseHelper {
         onCreate: (db, version) async {
           await db.execute('DROP TABLE IF EXISTS $tableName');
           await db.execute(createTableSql);
+          await db.execute('DROP TABLE IF EXISTS $userTableName');
+          await db.execute(createUsersTableSql);
+          await _seedAdmin(db);
         },
         onUpgrade: (db, oldVersion, newVersion) async {
           if (oldVersion < 2) {
@@ -79,11 +110,32 @@ class DatabaseHelper {
             ''');
             await db.execute('DROP TABLE game_assets_old');
           }
+          if (oldVersion < 3) {
+            await db.execute('DROP TABLE IF EXISTS $userTableName');
+            await db.execute(createUsersTableSql);
+            await _seedAdmin(db);
+          }
         },
       );
     } catch (e, stack) {
       developer.log('Gagal membuka database: $e', name: 'DatabaseHelper', error: e, stackTrace: stack);
       rethrow;
+    }
+  }
+
+  Future<void> _seedAdmin(DatabaseExecutor db) async {
+    final result = await db.query(
+      userTableName,
+      where: 'username = ?',
+      whereArgs: ['admin'],
+      limit: 1,
+    );
+    if (result.isEmpty) {
+      await db.insert(userTableName, {
+        'username': 'admin',
+        'password': 'admin',
+        'fullname': 'Administrator',
+      });
     }
   }
 
@@ -154,5 +206,78 @@ class DatabaseHelper {
       developer.log('Gagal hapus data: $e', name: 'DatabaseHelper', error: e, stackTrace: stack);
       throw Exception('Gagal menghapus data: $e');
     }
+  }
+
+  // ============================ AUTH (Users) ============================
+
+  Future<bool> isUsernameTaken(String username) async {
+    final user = await _findUserByUsername(username);
+    return user != null;
+  }
+
+  Future<Map<String, dynamic>?> _findUserByUsername(String username) async {
+    if (kIsWeb) {
+      final users = await _getUsersPrefs();
+      final index = users.indexWhere(
+        (e) => (e['username'] ?? '').toString().toLowerCase() == username.toLowerCase(),
+      );
+      if (index == -1) return null;
+      return users[index];
+    }
+    final db = await database;
+    final rows = await db.query(
+      userTableName,
+      where: 'username = ?',
+      whereArgs: [username],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<String?> registerUser({
+    required String username,
+    required String password,
+    String? fullname,
+  }) async {
+    final normalized = username.trim();
+    if (await isUsernameTaken(normalized)) {
+      return 'Username sudah terdaftar';
+    }
+    try {
+      if (kIsWeb) {
+        final users = await _getUsersPrefs();
+        int nextId = users.isEmpty ? 1 : (users.map((e) => e['id'] as int).reduce((a, b) => a > b ? a : b) + 1);
+        users.add({
+          'id': nextId,
+          'username': normalized,
+          'password': password,
+          'fullname': fullname?.trim() ?? normalized,
+        });
+        await _saveUsersPrefs(users);
+        return null;
+      }
+      final db = await database;
+      await db.insert(userTableName, {
+        'username': normalized,
+        'password': password,
+        'fullname': fullname?.trim() ?? normalized,
+      });
+      return null;
+    } catch (e, stack) {
+      developer.log('Gagal registrasi: $e', name: 'DatabaseHelper', error: e, stackTrace: stack);
+      return 'Gagal menyimpan data: $e';
+    }
+  }
+
+  Future<Map<String, dynamic>?> loginUser(String username, String password) async {
+    final user = await _findUserByUsername(username.trim());
+    if (user != null && user['password'] == password) {
+      return {
+        'id': user['id'],
+        'username': user['username'],
+        'fullname': user['fullname'] ?? user['username'],
+      };
+    }
+    return null;
   }
 }

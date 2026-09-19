@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controllers/app_controller.dart';
 import '../../widgets/app_widgets.dart';
 import '../assets/computation_screen.dart';
 import '../assets/crud_screen.dart';
@@ -13,6 +14,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppController appC = Get.find();
     return Scaffold(
       appBar: const GradientAppBar(title: 'Dashboard Utama'),
       body: PageBackground(
@@ -21,7 +23,13 @@ class HomeScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const _WelcomeHeader(),
+              Obx(
+                () => _WelcomeHeader(
+                  name: appC.loggedUser.value.isEmpty
+                      ? 'Pengguna'
+                      : appC.loggedUser.value,
+                ),
+              ),
               const SizedBox(height: 24),
               const SectionTitle(icon: Icons.apps, label: 'MENU APLIKASI'),
               const SizedBox(height: 12),
@@ -78,7 +86,9 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _WelcomeHeader extends StatelessWidget {
-  const _WelcomeHeader();
+  const _WelcomeHeader({required this.name});
+
+  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -110,20 +120,20 @@ class _WelcomeHeader extends StatelessWidget {
             child: const Icon(Icons.dashboard, color: Colors.white, size: 32),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selamat Datang',
-                  style: TextStyle(
+                  'Selamat Datang, $name',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'Kelola anggota, aset, dan tool konversi dalam satu aplikasi.',
                   style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
                 ),

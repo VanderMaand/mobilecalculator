@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hijri/hijri_calendar.dart';
+import '../db/database_helper.dart';
 
 class AppController extends GetxController {
   // Navigation
@@ -9,11 +10,13 @@ class AppController extends GetxController {
   
   // Session
   var isLoggedIn = false.obs;
+  var loggedUser = ''.obs;
+  final DatabaseHelper _db = DatabaseHelper();
 
   // Stopwatch
   var stopwatchTime = "00:00:00".obs;
   var isRunning = false.obs;
-  Stopwatch _stopwatch = Stopwatch();
+  final Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
 
   @override
@@ -30,23 +33,49 @@ class AppController extends GetxController {
   Future<void> checkSession() async {
     final prefs = await SharedPreferences.getInstance();
     isLoggedIn.value = prefs.getBool('isLogged') ?? false;
+    loggedUser.value = prefs.getString('loggedUser') ?? '';
   }
 
   Future<void> login(String username, String password) async {
-    if (username == 'admin' && password == 'admin') {
+    if (username.trim().isEmpty || password.isEmpty) {
+      Get.snackbar('Error', 'Username dan Password wajib diisi');
+      return;
+    }
+    final user = await _db.loginUser(username, password);
+    if (user != null) {
       final prefs = await SharedPreferences.getInstance();
+      String displayName = (user['fullname'] ?? '') as String;
+      if (displayName.isEmpty) displayName = user['username'] as String;
       await prefs.setBool('isLogged', true);
+      await prefs.setString('loggedUser', displayName);
       isLoggedIn.value = true;
+      loggedUser.value = displayName;
       Get.offAllNamed('/main');
     } else {
       Get.snackbar('Error', 'Username atau Password salah');
     }
   }
 
+  Future<String?> register(String username, String password, String fullname) async {
+    final error = await _db.registerUser(
+      username: username,
+      password: password,
+      fullname: fullname,
+    );
+    if (error == null) {
+      Get.snackbar('Sukses', 'Akun $username berhasil dibuat, silakan login');
+      return null;
+    }
+    Get.snackbar('Error', error);
+    return error;
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('isLogged');
+    await prefs.remove('loggedUser');
     isLoggedIn.value = false;
+    loggedUser.value = '';
     Get.offAllNamed('/login');
   }
 
