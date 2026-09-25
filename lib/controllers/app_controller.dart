@@ -18,6 +18,7 @@ class AppController extends GetxController {
   var isRunning = false.obs;
   final Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
+  final Duration _base = Duration.zero;
 
   @override
   void onInit() {
@@ -82,10 +83,11 @@ class AppController extends GetxController {
   // Stopwatch Logic
   void startStopwatch() {
     if (!isRunning.value) {
+      _stopwatch.reset();
       _stopwatch.start();
       isRunning.value = true;
       _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-        stopwatchTime.value = _formatDuration(_stopwatch.elapsed);
+        stopwatchTime.value = _formatDuration(_base + _stopwatch.elapsed);
       });
     }
   }
@@ -98,9 +100,11 @@ class AppController extends GetxController {
 
   void resetStopwatch() {
     _stopwatch.reset();
-    stopwatchTime.value = "00:00:00";
+    stopwatchTime.value = _formatDuration(_base);
     stopStopwatch();
   }
+
+  String get startDisplay => _formatDuration(_base);
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");

@@ -57,7 +57,7 @@ class StopwatchScreen extends StatelessWidget {
                         label: 'Reset',
                         icon: Icons.refresh,
                         color: const Color(0xFF616161),
-                        onPressed: appC.stopwatchTime.value == '00:00:00'
+                        onPressed: appC.stopwatchTime.value == appC.startDisplay
                             ? null
                             : appC.resetStopwatch,
                       ),

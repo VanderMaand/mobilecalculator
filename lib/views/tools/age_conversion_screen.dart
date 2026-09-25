@@ -41,7 +41,7 @@ class _AgeConversionScreenState extends State<AgeConversionScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime(2000, 1, 1),
-      firstDate: DateTime(1900),
+      firstDate: DateTime(1000),
       lastDate: DateTime.now(),
     );
 
